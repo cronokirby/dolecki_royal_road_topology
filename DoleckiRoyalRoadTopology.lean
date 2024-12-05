@@ -1,1 +1,2 @@
 import DoleckiRoyalRoadTopology.Chapter.C1
+import DoleckiRoyalRoadTopology.Chapter.C2
