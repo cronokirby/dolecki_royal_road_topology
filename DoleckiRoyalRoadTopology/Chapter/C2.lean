@@ -1,5 +1,6 @@
 import Mathlib.Data.Set.Defs
 import Mathlib.Data.Set.Basic
+import Mathlib.Data.Set.Finite.Basic
 
 section sets
 /-
@@ -40,8 +41,13 @@ structure Filter (α) where
   /-- A filter is a collection of subsets of α. -/
   sets : Set (Set α)
 
-  /-- The isotone property makes a filter upwardly closed. -/
-  isotone : sets.upper_closure = sets
+  /-- The isotone property makes a filter upwardly closed.
+
+  We have this as saying that the upper closure is contained in the sets.
+  By definition, the upper closure will also contain the sets, so these are equal,
+  but this avoids the need to prove a trivial statement over and over when constructing filters.
+  -/
+  isotone : sets.upper_closure ⊆ sets
 
   /-- The meet property gives us some downward reachingness. -/
   meet : (x ∈ sets) → (y ∈ sets) → x ∩ y ∈ sets
@@ -56,7 +62,7 @@ class Filter.Proper (F : Filter α) : Prop where
   no_empty_set : ∅ ∉ F.sets
 
 /-- A collection is a base for a filter, if its upper closure provides the colleciton of sets of F.-/
-def Filter.has_base {F : Filter α} (base : Set (Set α)) : Prop :=
+def Filter.has_base (F : Filter α) (base : Set (Set α)) : Prop :=
   base.upper_closure = F.sets
 
 /-- A filter is *principal* if there exists a single set generating it.
@@ -64,4 +70,25 @@ def Filter.has_base {F : Filter α} (base : Set (Set α)) : Prop :=
 Because this follows directly from there being a finite base, because of the meet
 property, we instead use the simpler definition.
 -/
-def Filter.Principal {F : Filter α} : Prop := ∃ B : Set α, F.has_base {B}
+def Filter.Principal (F : Filter α) : Prop := ∃ B : Set α, F.has_base {B}
+
+/-- Given a set, we can filter out the finite subsets of the set. -/
+def Filter.Cofinite (α : Type) : Filter α := {
+  sets := {x : Set α | xᶜ.Finite },
+  isotone := by
+    apply Set.subset_setOf.mpr
+    intro x h_x
+    have ⟨y, ⟨y_cof, y_sub_x⟩⟩ : ∃ y : Set α, yᶜ.Finite ∧ y ⊆ x := h_x
+    suffices xᶜ ⊆ yᶜ by
+      apply Set.Finite.subset y_cof
+      exact this
+    exact Set.compl_subset_compl.mpr y_sub_x
+  meet := by
+    intro x y h_x h_y
+    apply Set.mem_setOf.mp at h_x
+    apply Set.mem_setOf.mp at h_y
+    apply Set.mem_setOf.mpr
+    rw [Set.compl_inter]
+    exact Set.Finite.union h_x h_y
+  has_univ := by simp
+}
