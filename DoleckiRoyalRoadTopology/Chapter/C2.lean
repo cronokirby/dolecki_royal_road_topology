@@ -42,7 +42,7 @@ structure Filter (α) where
   sets : Set (Set α)
 
   /-- The isotone property makes a filter upwardly closed. -/
-  isotone : x ∈ sets → x ⊆ y → y ∈ sets
+  isotone : sets.upper_closure = sets
 
   /-- The meet property gives us some downward reachingness. -/
   meet : (x ∈ sets) → (y ∈ sets) → x ∩ y ∈ sets
@@ -58,4 +58,4 @@ class Filter.Proper (F : Filter α): Prop where
 
 /-- A collection is a base for a filter, if its upper closure provides the colleciton of sets of F.-/
 def Filter.has_base {F : Filter α} (base : Set (Set α)) : Prop :=
-  F.sets = base.upper_closure
+  base.upper_closure = F.sets
