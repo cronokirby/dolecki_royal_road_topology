@@ -96,6 +96,19 @@ def Cofinite (α : Type) : Filter α := {
 }
 
 /-- Filters can be given an ordering, based on inclusion between the underlying collections. -/
-instance : LE (Filter α) := { le := fun (a b : Filter α) => a.sets ⊆ b.sets }
+instance : LE (Filter α) := { le := fun (F G) => F.sets ⊆ G.sets }
+
+/-- Allow the shorthand x ∈ F, to say that x is one of the sets in F. -/
+instance : Membership (Set α) (Filter α) := ⟨fun (F x) => x ∈ F.sets⟩
+
+/-- The kernel of a filter is the bottom set of its collection.
+
+A filter does not necessarily contain its kernel, since only finite
+meets are guaranteed to be in the filter.
+-/
+def Kernel (F : Filter α) : Set α := ⋂ X ∈ F, X
+
+/-- A filter is free when its kernel is empty. -/
+def Free (F : Filter α) : Prop := F.Kernel = ∅
 
 end Filter
