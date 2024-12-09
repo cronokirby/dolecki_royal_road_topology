@@ -1,6 +1,7 @@
 import Mathlib.Data.Set.Defs
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Data.Set.Lattice
 
 section sets
 /-
@@ -60,6 +61,35 @@ structure Filter (α) where
 
 namespace Filter
 
+/-- Filters can be given an ordering, based on inclusion between the underlying collections. -/
+instance : LE (Filter α) := { le := fun (F G) => F.sets ⊆ G.sets }
+
+/-- Allow the shorthand x ∈ F, to say that x is one of the sets in F. -/
+instance : Membership (Set α) (Filter α) := ⟨fun (F x) => x ∈ F.sets⟩
+
+lemma has_finite_meets {F : Filter α} {X : Set (Set α)} {X_fin : X.Finite} : (X_sub_F : ∀ x ∈ X, x ∈ F) → ⋂₀ X ∈ F := by
+  let C (Y : Set _) : Prop := (∀ y ∈ Y, y ∈ F) → ⋂₀ Y ∈ F
+  have i_0 : C ∅ := by
+    have h : ⋂₀ ∅ = (Set.univ : Set α) := by
+      ext x : 1
+      simp_all only [Set.mem_sInter, Set.mem_empty_iff_false, IsEmpty.forall_iff, implies_true, Set.mem_univ]
+    intro _
+    rw [h]
+    exact F.has_univ
+  have i_1 : ∀ {a : Set α} {S : Set (Set α)}, a ∉ S → S.Finite → C S → C (insert a S) := by
+    intro a S _ _ C_S
+    intro all_in
+    suffices a ∩ ⋂₀ S ∈ F by
+      rw [Set.sInter_insert]
+      exact this
+    apply F.meet
+    . rw [Set.forall_mem_insert] at all_in
+      exact all_in.left
+    . rw [Set.forall_mem_insert] at all_in
+      apply C_S
+      exact all_in.right
+  exact Set.Finite.induction_on X_fin i_0 i_1
+
 class Proper (F : Filter α) : Prop where
   no_empty_set : ∅ ∉ F.sets
 
@@ -95,12 +125,6 @@ def Cofinite (α : Type) : Filter α := {
   has_univ := by simp
 }
 
-/-- Filters can be given an ordering, based on inclusion between the underlying collections. -/
-instance : LE (Filter α) := { le := fun (F G) => F.sets ⊆ G.sets }
-
-/-- Allow the shorthand x ∈ F, to say that x is one of the sets in F. -/
-instance : Membership (Set α) (Filter α) := ⟨fun (F x) => x ∈ F.sets⟩
-
 /-- The kernel of a filter is the bottom set of its collection.
 
 A filter does not necessarily contain its kernel, since only finite
@@ -110,5 +134,16 @@ def Kernel (F : Filter α) : Set α := ⋂ X ∈ F, X
 
 /-- A filter is free when its kernel is empty. -/
 def Free (F : Filter α) : Prop := F.Kernel = ∅
+
+lemma free_contains_cofinite {F : Filter α} : F.Free → (Cofinite α) ≤ F := by
+  intro h
+  have l1 (x) : {x}ᶜ ∈ F := by sorry
+  have l2 (A) (_ : A.Finite) : Aᶜ ∈ F := by sorry
+  have l3 (B) (h_B : Bᶜ.Finite) : B ∈ F := by
+    suffices Bᶜᶜ ∈ F by
+      rw [compl_compl] at this
+      exact this
+    exact l2 Bᶜ h_B
+  exact l3
 
 end Filter
