@@ -119,15 +119,63 @@ def Cofinite (α : Type) : Filter α := {
 A filter does not necessarily contain its kernel, since only finite
 meets are guaranteed to be in the filter.
 -/
-def Kernel (F : Filter α) : Set α := ⋂ X ∈ F, X
+def Kernel (F : Filter α) : Set α := ⋂₀ F.sets
 
 /-- A filter is free when its kernel is empty. -/
 def Free (F : Filter α) : Prop := F.Kernel = ∅
 
 lemma free_contains_cofinite {F : Filter α} : F.Free → (Cofinite α) ≤ F := by
   intro h
-  have l1 (x) : {x}ᶜ ∈ F := by sorry
-  have l2 (A) (_ : A.Finite) : Aᶜ ∈ F := by sorry
+  have l1 (x) : {x}ᶜ ∈ F := by
+    have F_free : x ∉ F.Kernel := by
+      rw [h]
+      exact Set.not_mem_empty x
+    have ⟨X, ⟨X_in_F, _⟩⟩ : ∃ X ∈ F, x ∉ X := by
+      by_contra h
+      rw [not_exists] at h
+      have h0 : ∀ Y ∈ F, x ∈ Y := by
+        intro Y h_Y
+        let h0 := h Y
+        rw [not_and_not_right] at h0
+        exact h0 h_Y
+      apply Set.mem_sInter.mpr at h0
+      have h1 : x ∉ ⋂₀ F.sets := by exact F_free
+      simp_all only [not_and, not_not]
+    suffices X ⊆ {x}ᶜ by
+      suffices {x}ᶜ ∈ F.sets.upper_closure by
+        exact Set.mem_of_subset_of_mem F.isotone this
+      apply Set.mem_setOf.mpr
+      exact ⟨X, ⟨X_in_F, this⟩⟩
+    apply Set.subset_compl_singleton_iff.mpr
+    assumption
+  have l2 (A) (A_fin : A.Finite) : Aᶜ ∈ F := by
+    let f : α → Set α := fun (a) => {a}ᶜ
+    let X : Set (Set α) := f '' A
+    suffices Aᶜ = ⋂₀ X by
+      rw [this]
+      apply F.has_finite_meets
+      . suffices ∀ a, {a}ᶜ ∈ F by
+          intro x h_x
+          let ⟨a, ⟨_, a_compl_eq_x⟩⟩ := h_x
+          rw [←a_compl_eq_x]
+          apply this
+        exact l1
+      . exact Set.Finite.image f A_fin
+    simp_all only [Set.sInter_image, X, f]
+    ext x : 1
+    simp_all only [Set.mem_compl_iff, Set.mem_iInter, Set.mem_singleton_iff]
+    apply Iff.intro
+    · intro a i i_1
+      apply Aesop.BuiltinRules.not_intro
+      intro a_1
+      subst a_1
+      simp_all only [not_true_eq_false]
+    · intro a
+      apply Aesop.BuiltinRules.not_intro
+      intro a_1
+      apply a
+      · exact a_1
+      · simp_all only
   have l3 (B) (h_B : Bᶜ.Finite) : B ∈ F := by
     suffices Bᶜᶜ ∈ F by
       rw [compl_compl] at this
