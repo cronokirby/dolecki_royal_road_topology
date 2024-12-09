@@ -58,11 +58,13 @@ structure Filter (α) where
   -/
   has_univ : Set.univ ∈ sets
 
-class Filter.Proper (F : Filter α) : Prop where
+namespace Filter
+
+class Proper (F : Filter α) : Prop where
   no_empty_set : ∅ ∉ F.sets
 
 /-- A collection is a base for a filter, if its upper closure provides the colleciton of sets of F.-/
-def Filter.has_base (F : Filter α) (base : Set (Set α)) : Prop :=
+def has_base (F : Filter α) (base : Set (Set α)) : Prop :=
   base.upper_closure = F.sets
 
 /-- A filter is *principal* if there exists a single set generating it.
@@ -70,10 +72,10 @@ def Filter.has_base (F : Filter α) (base : Set (Set α)) : Prop :=
 Because this follows directly from there being a finite base, because of the meet
 property, we instead use the simpler definition.
 -/
-def Filter.Principal (F : Filter α) : Prop := ∃ B : Set α, F.has_base {B}
+def Principal (F : Filter α) : Prop := ∃ B : Set α, F.has_base {B}
 
 /-- Given a set, we can filter out the finite subsets of the set. -/
-def Filter.Cofinite (α : Type) : Filter α := {
+def Cofinite (α : Type) : Filter α := {
   sets := {x : Set α | xᶜ.Finite },
   isotone := by
     apply Set.subset_setOf.mpr
@@ -92,3 +94,8 @@ def Filter.Cofinite (α : Type) : Filter α := {
     exact Set.Finite.union h_x h_y
   has_univ := by simp
 }
+
+/-- Filters can be given an ordering, based on inclusion between the underlying collections. -/
+instance : LE (Filter α) := { le := fun (a b : Filter α) => a.sets ⊆ b.sets }
+
+end Filter
