@@ -3,6 +3,8 @@ import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Data.Set.Lattice
 
+import DoleckiRoyalRoadTopology.Set.Util
+
 section sets
 /-
 ! This section contains a few useful constructions and theorems about sets
@@ -67,33 +69,20 @@ instance : LE (Filter α) := { le := fun (F G) => F.sets ⊆ G.sets }
 /-- Allow the shorthand x ∈ F, to say that x is one of the sets in F. -/
 instance : Membership (Set α) (Filter α) := ⟨fun (F x) => x ∈ F.sets⟩
 
+/-- A technical lemma extending the meet property from two sets to any finite number of sets.
+
+This can be generalized quite a bit.
+-/
 lemma has_finite_meets {F : Filter α} {X : Set (Set α)} {X_fin : X.Finite} : (X_sub_F : ∀ x ∈ X, x ∈ F) → ⋂₀ X ∈ F := by
-  let C (Y : Set _) : Prop := (∀ y ∈ Y, y ∈ F) → ⋂₀ Y ∈ F
-  have i_0 : C ∅ := by
-    have h : ⋂₀ ∅ = (Set.univ : Set α) := by
-      ext x : 1
-      simp_all only [Set.mem_sInter, Set.mem_empty_iff_false, IsEmpty.forall_iff, implies_true, Set.mem_univ]
-    intro _
-    rw [h]
-    exact F.has_univ
-  have i_1 : ∀ {a : Set α} {S : Set (Set α)}, a ∉ S → S.Finite → C S → C (insert a S) := by
-    intro a S _ _ C_S
-    intro all_in
-    suffices a ∩ ⋂₀ S ∈ F by
-      rw [Set.sInter_insert]
-      exact this
-    apply F.meet
-    . rw [Set.forall_mem_insert] at all_in
-      exact all_in.left
-    . rw [Set.forall_mem_insert] at all_in
-      apply C_S
-      exact all_in.right
-  exact Set.Finite.induction_on X_fin i_0 i_1
+  apply Set.inter_to_sInter_extension
+  . exact F.has_univ
+  . exact F.meet
+  . exact X_fin
 
 class Proper (F : Filter α) : Prop where
   no_empty_set : ∅ ∉ F.sets
 
-/-- A collection is a base for a filter, if its upper closure provides the colleciton of sets of F.-/
+/-- A collection is a base fo r a filter, if its upper closure provides the colleciton of sets of F.-/
 def has_base (F : Filter α) (base : Set (Set α)) : Prop :=
   base.upper_closure = F.sets
 
