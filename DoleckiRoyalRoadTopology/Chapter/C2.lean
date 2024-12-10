@@ -97,12 +97,8 @@ def Cofinite (α : Type) : Filter α := {
       exact Set.Finite.subset h_x this
     exact Set.compl_subset_compl.mpr x_sub_y
   meet := by
-    intro x y h_x h_y
-    apply Set.mem_setOf.mp at h_x
-    apply Set.mem_setOf.mp at h_y
-    apply Set.mem_setOf.mpr
-    rw [Set.compl_inter]
-    exact Set.Finite.union h_x h_y
+    intros
+    simp_all only [Set.mem_setOf, Set.compl_inter, Set.Finite.union]
   has_univ := by simp
 }
 
