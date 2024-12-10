@@ -99,7 +99,7 @@ def Cofinite (α : Type) : Filter α := {
   meet := by
     intros
     simp_all only [Set.mem_setOf, Set.compl_inter, Set.Finite.union]
-  has_univ := by simp
+  has_univ := by simp only [Set.mem_setOf_eq, Set.compl_univ, Set.finite_empty]
 }
 
 /-- The kernel of a filter is the bottom set of its collection.
@@ -163,13 +163,12 @@ lemma free_contains_cofinite {F : Filter α} : F.Free → (Cofinite α) ≤ F :=
       · simp_all only
   have l3 (B) (h_B : Bᶜ.Finite) : B ∈ F := by
     suffices Bᶜᶜ ∈ F by
-      rw [compl_compl] at this
-      exact this
+      simp_all only [compl_compl]
     exact l2 Bᶜ h_B
   exact l3
 
 /-- The pushforward lets us create a filter on a target type by using a function. -/
-def Pushforward (φ : α → β) (F : Filter α) : Filter β :=
+def Pushforward (φ : α → β) : (Filter α) → Filter β := fun (F) =>
   {
     sets := {X : Set β | φ⁻¹' X ∈ F.sets },
     has_univ := by
