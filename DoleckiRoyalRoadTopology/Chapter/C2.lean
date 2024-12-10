@@ -44,13 +44,8 @@ structure Filter (α) where
   /-- A filter is a collection of subsets of α. -/
   sets : Set (Set α)
 
-  /-- The isotone property makes a filter upwardly closed.
-
-  We have this as saying that the upper closure is contained in the sets.
-  By definition, the upper closure will also contain the sets, so these are equal,
-  but this avoids the need to prove a trivial statement over and over when constructing filters.
-  -/
-  isotone : sets.upper_closure ⊆ sets
+  /-- The isotone property makes a filter upwardly closed. -/
+  isotone : ∀ {x y : Set α}, x ⊆ y → x ∈ sets → y ∈ sets
 
   /-- The meet property gives us some downward reachingness. -/
   meet : (x ∈ sets) → (y ∈ sets) → x ∩ y ∈ sets
@@ -97,13 +92,10 @@ def Principal (F : Filter α) : Prop := ∃ B : Set α, F.has_base {B}
 def Cofinite (α : Type) : Filter α := {
   sets := {x : Set α | xᶜ.Finite },
   isotone := by
-    apply Set.subset_setOf.mpr
-    intro x h_x
-    have ⟨y, ⟨y_cof, y_sub_x⟩⟩ : ∃ y : Set α, yᶜ.Finite ∧ y ⊆ x := h_x
-    suffices xᶜ ⊆ yᶜ by
-      apply Set.Finite.subset y_cof
-      exact this
-    exact Set.compl_subset_compl.mpr y_sub_x
+    intro x y x_sub_y h_x
+    suffices yᶜ ⊆ xᶜ by
+      exact Set.Finite.subset h_x this
+    exact Set.compl_subset_compl.mpr x_sub_y
   meet := by
     intro x y h_x h_y
     apply Set.mem_setOf.mp at h_x
@@ -142,10 +134,7 @@ lemma free_contains_cofinite {F : Filter α} : F.Free → (Cofinite α) ≤ F :=
       have h1 : x ∉ ⋂₀ F.sets := by exact F_free
       simp_all only [not_and, not_not]
     suffices X ⊆ {x}ᶜ by
-      suffices {x}ᶜ ∈ F.sets.upper_closure by
-        exact Set.mem_of_subset_of_mem F.isotone this
-      apply Set.mem_setOf.mpr
-      exact ⟨X, ⟨X_in_F, this⟩⟩
+      apply F.isotone this X_in_F
     apply Set.subset_compl_singleton_iff.mpr
     assumption
   have l2 (A) (A_fin : A.Finite) : Aᶜ ∈ F := by
@@ -183,4 +172,28 @@ lemma free_contains_cofinite {F : Filter α} : F.Free → (Cofinite α) ≤ F :=
     exact l2 Bᶜ h_B
   exact l3
 
+/-- The pushforward lets us create a filter on a target type by using a function. -/
+def Pushforward (φ : α → β) (F : Filter α) : Filter β :=
+  {
+    sets := {X : Set β | φ⁻¹' X ∈ F.sets },
+    has_univ := by
+      simp_all only [Set.mem_setOf_eq, Set.preimage_univ]
+      exact F.has_univ
+    meet := by
+      intro x y h0 h1
+      simp_all only [Set.mem_setOf_eq, Set.preimage_inter]
+      exact F.meet h0 h1
+    isotone := by
+      intro x y x_sub_y x_in_F
+      simp_all only [Set.mem_setOf_eq]
+      suffices φ⁻¹' x ⊆ φ⁻¹' y by
+        apply F.isotone this x_in_F
+      rw [Set.subset_def]
+      intro a h_a
+      rw [Set.mem_preimage]
+      apply x_sub_y
+      exact h_a
+  }
+
+notation:1000 arg:1000 "↱" => Filter.Pushforward arg
 end Filter
