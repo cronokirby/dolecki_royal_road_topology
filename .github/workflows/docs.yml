@@ -1,0 +1,40 @@
+# Cribbed from https://github.com/leanprover-community/lean4-samples/blob/b6270e5b96d8aa62a932ca22c2e7e053a53951ec/.github/workflows/ci.yml
+
+# Type check code, and build documentation.
+name: "Deploy Docs"
+# We want the workflow to run whenever there's changes on main.
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy-docs:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+      - name: "Install Devtools"
+        run: sudo apt-get install -y just
+      - name: "Install Lean"
+        run: |
+          curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh
+          chmod u+x elan-init.sh
+          ./elan-init.sh -y --default-toolchain leanprover/lean4:nightly
+          echo "Adding location $HOME/.elan/bin to PATH..."
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+      - name: "Lean is Installed"
+        run: |
+          elan --version
+          lean --version
+          lake --version
+      - name: "Build Docs"
+        run: just build-docs
+      # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+      - name: "Setup Pages"
+        uses: "actions/configure-pages@v5"
+      - name: "Upload artifact"
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ".lake/build/doc/"
+      - name: "Deploy to Github Pages"
+        uses: "actions/deploy-pages@v4"
