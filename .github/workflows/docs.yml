@@ -9,6 +9,7 @@ on:
 # Needed to upload artifacts
 permissions:
   id-token: write
+  pages: write
 jobs:
   deploy-docs:
     runs-on: "ubuntu-latest"
@@ -43,7 +44,7 @@ jobs:
         run: just build-docs
       - name: "Save Lake Cache"
         id: cache-lake-save
-        uses: actions/cache/restore@v4
+        uses: actions/cache/save@v4
         with:
           path: ".lake/"
           key: "${{ steps.cache-lake-restore.outputs.cache-primary-key }}"
