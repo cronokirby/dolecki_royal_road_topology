@@ -1,1 +1,0 @@
-# dolecki_royal_road_topology
