@@ -6,7 +6,9 @@ name: "Deploy Docs"
 on:
   push:
     branches: ["main"]
-
+# Needed to upload artifacts
+permissions:
+  id-token: write
 jobs:
   deploy-docs:
     runs-on: "ubuntu-latest"
