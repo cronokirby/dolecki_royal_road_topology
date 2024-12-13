@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ".lake/"
-          keys: "${{ steps.cache-lake-restore.outputs.cache-primary-key }}"
+          key: "${{ steps.cache-lake-restore.outputs.cache-primary-key }}"
       # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
       - name: "Setup Pages"
         uses: "actions/configure-pages@v5"
