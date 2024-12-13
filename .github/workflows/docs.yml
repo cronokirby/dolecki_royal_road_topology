@@ -33,8 +33,20 @@ jobs:
           elan --version
           lean --version
           lake --version
+      - name: "Restore Lake Cache"
+        id: cache-lake-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ".lake/"
+          key: "${{ runner.os }}-lake-${{ hashFiles('lake-manifest.json') }}"
       - name: "Build Docs"
         run: just build-docs
+      - name: "Save Lake Cache"
+        id: cache-lake-save
+        uses: actions/cache/restore@v4
+        with:
+          path: ".lake/"
+          keys: "${{ steps.cache-lake-restore.outputs.cache-primary-key }}"
       # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
       - name: "Setup Pages"
         uses: "actions/configure-pages@v5"
